@@ -3,18 +3,22 @@ import java.nio.file.Files;
 import java.nio.charset.StandardCharsets;
 
 public class PrintSVG {
-    private BufferedWriter bw = null;
+    private BufferedWriter bw;
+
+    private final String indentStr;
     private int indentAmount = 0;
     private String indent = "";
+
     private boolean startOfLine = true;
 
-    public PrintSVG(File output) throws IOException{
-        //ps = new PrintStream(new BufferedOutputStream(new FileOutputStream(output, false)), true, StandardCharsets.UTF_8);
+
+    public PrintSVG(File output, String indent) throws IOException{
         bw = Files.newBufferedWriter(output.toPath(), StandardCharsets.UTF_8);
+        indentStr = indent;
     }
 
     private void updateIndent(){
-        indent = "    ".repeat(indentAmount);
+        indent = indentStr.repeat(indentAmount);
     }
 
     public void moreIndent(){
@@ -30,10 +34,10 @@ public class PrintSVG {
     }
 
     public void print(String input) throws IOException{
-        if(bw == null) throw new IOException("Attempting to write to a closed PrintSVG.");
+        checkClosed();
         if(startOfLine) bw.write(indent);
         bw.write(input);
-        startOfLine = input.endsWith("\n");
+        startOfLine = input.charAt(input.length()-1) == '\n';
     }
 
     public void print(int input) throws IOException{
@@ -41,7 +45,15 @@ public class PrintSVG {
     }
 
     public void println(String input) throws IOException{
-        print(input + "\n");
+        checkClosed();
+        if(startOfLine) bw.write(indent);
+        bw.write(input);
+        bw.write('\n');
+        startOfLine = true;
+    }
+
+    private void checkClosed() throws IOException{
+        if(bw == null) throw new IOException("Attempting to write to a closed PrintSVG.");
     }
 
     public void println(int input) throws IOException{

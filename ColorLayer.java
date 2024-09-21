@@ -12,6 +12,8 @@ public class ColorLayer implements Comparable<ColorLayer>{
     private final BitGrid mask;
     private Island[] children;
 
+    private static final Island[] EMPTY_ISLANDS = new Island[0];
+
     public ColorLayer(int new_color, List<IntPoint> detections){
         color = new_color;
         int temp_x_min = Integer.MAX_VALUE;
@@ -36,7 +38,7 @@ public class ColorLayer implements Comparable<ColorLayer>{
         for(IntPoint p : detections){
             mask.setBit(p.x-x_min, p.y-y_min, true);
         }
-        children = new Island[0];
+        children = EMPTY_ISLANDS;
     }
 
     public String debugInfo(){
@@ -83,16 +85,15 @@ public class ColorLayer implements Comparable<ColorLayer>{
     }
 
     private int[] getMatchedIslands(int[][] grid){
-        HashSet<Integer> matchedIslands = new HashSet<>();
+        BitSet matchedIslands = new BitSet();
         for(int y=0; y<mask.height; y++){
             for(int x=0; x<mask.width; x++){
-                int check = grid[y][x];
                 if(mask.getBit(x, y)){
-                    matchedIslands.add(check);
+                    matchedIslands.set(grid[y][x]);
                 }
             }
         }
-        return matchedIslands.stream().mapToInt(i->i).sorted().toArray();
+        return matchedIslands.stream().toArray();
     }
 
     public void generateChildren(BitGrid prevMask){

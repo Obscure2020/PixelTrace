@@ -42,13 +42,11 @@ public class Island {
         }
         for(int x=0; x<pixels.width; x++){
             if(grid[0][x] == -1) FloodFills.eightDirectionFill(grid, new IntPoint(x, 0), -1, -2);
+            if(grid[pixels.height - 1][x] == -1) FloodFills.eightDirectionFill(grid, new IntPoint(x, pixels.height - 1), -1, -2);
         }
         for(int y=1; y<pixels.height; y++){
             if(grid[y][0] == -1) FloodFills.eightDirectionFill(grid, new IntPoint(0, y), -1, -2);
             if(grid[y][pixels.width-1] == -1) FloodFills.eightDirectionFill(grid, new IntPoint(pixels.width-1, y), -1, -2);
-        }
-        for(int x=1; x<pixels.width-1; x++){
-            if(grid[pixels.height-1][x] == -1) FloodFills.eightDirectionFill(grid, new IntPoint(x, pixels.height-1), -1, -2);
         }
         int childCount = 0;
         for(int y=0; y<pixels.height; y++){
@@ -90,19 +88,17 @@ public class Island {
     }
 
     private boolean safeLookup(int x, int y){
-        if(x < 0) return false;
-        if(x >= pixels.width) return false;
-        if(y < 0) return false;
-        if(y >= pixels.height) return false;
-        return pixels.getBit(x, y);
+        return x >= 0 && x < pixels.width
+                && y >= 0 && y < pixels.height
+                && pixels.getBit(x, y);
     }
 
     private int fourSquareVal(int x, int y){
-        int eight = safeLookup(x-1, y-1) ? 8 : 0;
-        int four = safeLookup(x, y-1) ? 4 : 0;
-        int two = safeLookup(x-1, y) ? 2 : 0;
-        int one = safeLookup(x, y) ? 1 : 0;
-        return eight | four | two | one;
+        int topLeft = safeLookup(x-1, y-1) ? 8 : 0;
+        int top = safeLookup(x, y-1) ? 4 : 0;
+        int left = safeLookup(x-1, y) ? 2 : 0;
+        int center = safeLookup(x, y) ? 1 : 0;
+        return topLeft | top | left | center;
     }
 
     private IntPoint findUpperLeftCorner(){
@@ -138,19 +134,12 @@ public class Island {
                 }
                 direction = turn;
             }
-            switch(direction){
-                case RIGHT:
-                    cur_x++;
-                    break;
-                case DOWN:
-                    cur_y++;
-                    break;
-                case LEFT:
-                    cur_x--;
-                    break;
-                default: //case UP
-                    cur_y--;
-                    break;
+            switch(direction) {
+                case RIGHT -> cur_x++;
+                case DOWN -> cur_y++;
+                case LEFT -> cur_x--;
+                case UP -> cur_y--;
+                default -> throw new IllegalStateException("Unexpected value: " + direction);
             }
         }
         out.print(" z");

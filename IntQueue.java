@@ -2,6 +2,7 @@ public class IntQueue {
     private int[] arr;
     private int head = 0;
     private int tail = 0;
+    private int size = 0;
 
     public IntQueue(int capacity){
         arr = new int[Math.max(capacity, 4)]; //Four seems a sane minimum capacity to me.
@@ -18,7 +19,7 @@ public class IntQueue {
         //This is MEASURABLY faster.
         //Sincerely, Obscure (Joey)
         return (i >= arr.length) ? 0 : i;
-	}
+    }
 
     public void add(int i){
         if(wrapIncrement(tail) == head){
@@ -40,6 +41,7 @@ public class IntQueue {
         }
         arr[tail] = i;
         tail = wrapIncrement(tail);
+        size++;
     }
 
     public void add(int a, int b){
@@ -53,14 +55,15 @@ public class IntQueue {
         }
         int result = arr[head];
         head = wrapIncrement(head);
+        size--;
         return result;
     }
 
-    public boolean isEmpty(){
+    public final boolean isEmpty(){
         return head == tail;
     }
 
     public int size(){
-        return (tail - head + arr.length) % arr.length;
+        return size;
     }
 }
