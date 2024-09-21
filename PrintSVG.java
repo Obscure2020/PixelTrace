@@ -4,13 +4,10 @@ import java.nio.charset.StandardCharsets;
 
 public class PrintSVG {
     private BufferedWriter bw;
-
     private final String indentStr;
     private int indentAmount = 0;
     private String indent = "";
-
     private boolean startOfLine = true;
-
 
     public PrintSVG(File output, String indent) throws IOException{
         bw = Files.newBufferedWriter(output.toPath(), StandardCharsets.UTF_8);

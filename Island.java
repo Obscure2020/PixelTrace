@@ -28,8 +28,8 @@ public class Island {
         global_x_min = x_min;
         global_y_min = y_min;
         pixels = pixels_input;
-        if(!canHaveChildren) return;
 
+        if(!canHaveChildren) return;
         int[][] grid = new int[pixels.height][pixels.width];
         for(int y=0; y<pixels.height; y++){
             for(int x=0; x<pixels.width; x++){
