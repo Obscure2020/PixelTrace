@@ -35,6 +35,8 @@ public class Island {
         final int height = pixels.height;
         //Cache these values to enjoy a slight performance uplift and less verbose syntax.
 
+        if(width<=2 || height<=2) return;
+
         int[][] grid = new int[height][width];
         for(int y=0; y<height; y++){
             for(int x=0; x<width; x++){
