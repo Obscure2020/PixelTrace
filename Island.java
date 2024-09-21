@@ -50,7 +50,7 @@ public class Island {
             if(grid[0][x] == -1) FloodFills.eightDirectionFill(grid, x, 0, -1, -2);
             if(grid[height-1][x] == -1) FloodFills.eightDirectionFill(grid, x, height-1, -1, -2);
         }
-        for(int y=1; y<pixels.height-1; y++){
+        for(int y=1; y<height-1; y++){
             //This loop checks the left edge and the right edge,
             //except we skip the topmost and bottommost pixels,
             //because the previous loop already checked those.
