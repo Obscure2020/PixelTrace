@@ -30,6 +30,10 @@ public class PrintSVG {
         updateIndent();
     }
 
+    private void checkClosed() throws IOException{
+        if(bw == null) throw new IOException("Attempting to write to a closed PrintSVG.");
+    }
+
     public void print(String input) throws IOException{
         checkClosed();
         if(startOfLine) bw.write(indent);
@@ -47,10 +51,6 @@ public class PrintSVG {
         bw.write(input);
         bw.write('\n');
         startOfLine = true;
-    }
-
-    private void checkClosed() throws IOException{
-        if(bw == null) throw new IOException("Attempting to write to a closed PrintSVG.");
     }
 
     public void println(int input) throws IOException{
