@@ -1,7 +1,7 @@
 public class FloodFills {
-    public static void fourDirectionFill(int[][] grid, IntPoint start, int target, int newVal){
+    public static void fourDirectionFill(int[][] grid, int start_x, int start_y, int target, int newVal){
         IntQueue points = new IntQueue();
-        points.add(start.x, start.y);
+        points.add(start_x, start_y);
         int width = grid[0].length - 1;
         int height = grid.length - 1;
 
@@ -18,9 +18,9 @@ public class FloodFills {
         }
     }
 
-    public static void eightDirectionFill(int[][] grid, IntPoint start, int target, int newVal){
+    public static void eightDirectionFill(int[][] grid, int start_x, int start_y, int target, int newVal){
         IntQueue points = new IntQueue();
-        points.add(start.x, start.y);
+        points.add(start_x, start_y);
         int width = grid[0].length - 1;
         int height = grid.length - 1;
 

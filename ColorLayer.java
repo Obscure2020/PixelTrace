@@ -118,7 +118,7 @@ public class ColorLayer implements Comparable<ColorLayer>{
         for(int y=0; y<mask.height; y++){
             for(int x=0; x<mask.width; x++){
                 if(grid[y][x] == -1){
-                    FloodFills.fourDirectionFill(grid, new IntPoint(x, y), -1, islandCount);
+                    FloodFills.fourDirectionFill(grid, x, y, -1, islandCount);
                     islandCount++;
                 }
             }

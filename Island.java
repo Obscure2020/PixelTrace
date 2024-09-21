@@ -41,18 +41,18 @@ public class Island {
             }
         }
         for(int x=0; x<pixels.width; x++){
-            if(grid[0][x] == -1) FloodFills.eightDirectionFill(grid, new IntPoint(x, 0), -1, -2);
-            if(grid[pixels.height - 1][x] == -1) FloodFills.eightDirectionFill(grid, new IntPoint(x, pixels.height - 1), -1, -2);
+            if(grid[0][x] == -1) FloodFills.eightDirectionFill(grid, x, 0, -1, -2);
+            if(grid[pixels.height - 1][x] == -1) FloodFills.eightDirectionFill(grid, x, pixels.height - 1, -1, -2);
         }
         for(int y=1; y<pixels.height; y++){
-            if(grid[y][0] == -1) FloodFills.eightDirectionFill(grid, new IntPoint(0, y), -1, -2);
-            if(grid[y][pixels.width-1] == -1) FloodFills.eightDirectionFill(grid, new IntPoint(pixels.width-1, y), -1, -2);
+            if(grid[y][0] == -1) FloodFills.eightDirectionFill(grid, 0, y, -1, -2);
+            if(grid[y][pixels.width-1] == -1) FloodFills.eightDirectionFill(grid, pixels.width-1, y, -1, -2);
         }
         int childCount = 0;
         for(int y=0; y<pixels.height; y++){
             for(int x=0; x<pixels.width; x++){
                 if(grid[y][x] == -1){
-                    FloodFills.fourDirectionFill(grid, new IntPoint(x, y), -1, childCount);
+                    FloodFills.fourDirectionFill(grid, x, y, -1, childCount);
                     childCount++;
                 }
             }
