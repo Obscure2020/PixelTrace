@@ -30,9 +30,14 @@ public class Island {
         pixels = pixels_input;
 
         if(!canHaveChildren) return;
-        int[][] grid = new int[pixels.height][pixels.width];
-        for(int y=0; y<pixels.height; y++){
-            for(int x=0; x<pixels.width; x++){
+
+        final int width = pixels.width;
+        final int height = pixels.height;
+        //Cache these values to enjoy a slight performance uplift and less verbose syntax.
+
+        int[][] grid = new int[height][width];
+        for(int y=0; y<height; y++){
+            for(int x=0; x<width; x++){
                 if(pixels.getBit(x, y)){
                     grid[y][x] = -2;
                 } else {
@@ -40,17 +45,21 @@ public class Island {
                 }
             }
         }
-        for(int x=0; x<pixels.width; x++){
+        for(int x=0; x<width; x++){
+            //This loop checks the top edge and the bottom edge.
             if(grid[0][x] == -1) FloodFills.eightDirectionFill(grid, x, 0, -1, -2);
-            if(grid[pixels.height - 1][x] == -1) FloodFills.eightDirectionFill(grid, x, pixels.height - 1, -1, -2);
+            if(grid[height-1][x] == -1) FloodFills.eightDirectionFill(grid, x, height-1, -1, -2);
         }
-        for(int y=1; y<pixels.height; y++){
+        for(int y=1; y<pixels.height-1; y++){
+            //This loop checks the left edge and the right edge,
+            //except we skip the topmost and bottommost pixels,
+            //because the previous loop already checked those.
             if(grid[y][0] == -1) FloodFills.eightDirectionFill(grid, 0, y, -1, -2);
-            if(grid[y][pixels.width-1] == -1) FloodFills.eightDirectionFill(grid, pixels.width-1, y, -1, -2);
+            if(grid[y][width-1] == -1) FloodFills.eightDirectionFill(grid, width-1, y, -1, -2);
         }
         int childCount = 0;
-        for(int y=0; y<pixels.height; y++){
-            for(int x=0; x<pixels.width; x++){
+        for(int y=0; y<height; y++){
+            for(int x=0; x<width; x++){
                 if(grid[y][x] == -1){
                     FloodFills.fourDirectionFill(grid, x, y, -1, childCount);
                     childCount++;
@@ -59,12 +68,12 @@ public class Island {
         }
         children = new Island[childCount];
         for(int i=0; i<childCount; i++){
-            int local_x_min = pixels.width;
+            int local_x_min = width;
             int local_x_max = -1;
-            int local_y_min = pixels.height;
+            int local_y_min = height;
             int local_y_max = -1;
-            for(int y=0; y<pixels.height; y++){
-                for(int x=0; x<pixels.width; x++){
+            for(int y=0; y<height; y++){
+                for(int x=0; x<width; x++){
                     if(grid[y][x] == i){
                         local_x_min = Math.min(local_x_min, x);
                         local_x_max = Math.max(local_x_max, x);
@@ -88,9 +97,7 @@ public class Island {
     }
 
     private boolean safeLookup(int x, int y){
-        return x >= 0 && x < pixels.width
-                && y >= 0 && y < pixels.height
-                && pixels.getBit(x, y);
+        return (x>=0) && (x<pixels.width) && (y>=0) && (y<pixels.height) && pixels.getBit(x, y);
     }
 
     private int fourSquareVal(int x, int y){
@@ -109,7 +116,7 @@ public class Island {
                 }
             }
         }
-        return new IntPoint(0, 0); //Just in case...
+        throw new AssertionError("Every island has at least one upper-left corner. The only way for this exception to trip is some sort of memory corruption or other catastrophic error has occurred.");
     }
 
     public void pathTrace(PrintSVG out) throws IOException{
