@@ -1,6 +1,7 @@
 import java.io.*;
 import java.awt.image.BufferedImage;
 import javax.imageio.ImageIO;
+import java.util.Arrays;
 
 public class BitGrid {
     public final int width;
@@ -22,6 +23,12 @@ public class BitGrid {
             throw new IllegalArgumentException("Dimensions of " + width + "x" + height + " would require the storage of " + cells + " longs, which is beyond indexing maximum of " + Integer.MAX_VALUE + ".");
         }
         binData = new long[(int)cells];
+    }
+
+    public BitGrid(BitGrid other){
+        width = other.width;
+        height = other.height;
+        binData = Arrays.copyOf(other.binData, other.binData.length);
     }
 
     private IndexAndMask indexBit(int x, int y){

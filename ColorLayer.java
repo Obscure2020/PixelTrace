@@ -2,7 +2,7 @@ import java.io.IOException;
 import java.util.*;
 
 public class ColorLayer implements Comparable<ColorLayer>{
-    private final int color;
+    public final int color;
     private final int x_min;
     private final int x_max;
     private final int y_min;
@@ -73,15 +73,19 @@ public class ColorLayer implements Comparable<ColorLayer>{
 
     @Override
     public int compareTo(ColorLayer other) {
-        int area_compare = Long.compare(other.bounding_area, bounding_area);
-        if(area_compare == 0){
-            int count_compare = Long.compare(other.pixel_count, pixel_count);
-            if(count_compare == 0){
-                return Integer.compareUnsigned(color, other.color);
+        int alpha_compare = Integer.compare(color >>> 24, other.color >>> 24); //Lower alpha is further towards the back
+        if(alpha_compare == 0){
+            int area_compare = Long.compare(other.bounding_area, bounding_area); //Greater area is further towards the back
+            if(area_compare == 0){
+                int count_compare = Long.compare(other.pixel_count, pixel_count); //Greater pixel count is further towards the back
+                if(count_compare == 0){
+                    return Integer.compareUnsigned(color & 0xFFFFFF, other.color & 0xFFFFFF); //Darker color is further towards the back
+                }
+                return count_compare;
             }
-            return count_compare;
+            return area_compare;
         }
-        return area_compare;
+        return alpha_compare;
     }
 
     private int[] getMatchedIslands(int[][] grid){
@@ -156,8 +160,13 @@ public class ColorLayer implements Comparable<ColorLayer>{
     }
 
     public void printSVG(PrintSVG out) throws IOException{
-        String colorStr = "#" + Main.leftPad(Integer.toHexString(color & 0xFFFFFF).toUpperCase(), '0', 6);
-        out.print("<path fill=\"" + colorStr + "\" d=\"");
+        String colorSpec = "fill=\"#" + Main.leftPad(Integer.toHexString(color & 0xFFFFFF).toUpperCase(), '0', 6) + "\"";
+        int alpha = color >>> 24;
+        if(alpha != 0xFF){
+            float opacity = ((float) alpha) / 255.0f;
+            colorSpec += " fill-opacity=\"" + opacity + "\"";
+        }
+        out.print("<path " + colorSpec + " d=\"");
         children[0].pathTrace(out);
         for(int i=1; i<children.length; i++){
             out.print(" ");

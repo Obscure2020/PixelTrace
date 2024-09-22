@@ -19,8 +19,9 @@ class Main{
         HashMap<Integer, ArrayList<IntPoint>> detections = new HashMap<>();
         for(int y=0; y<height; y++){
             for(int x=0; x<width; x++){
-                //TODO: Remove this alpha channel coercion when alpha support is ready.
-                int color = bitmap.getRGB(x, y) | 0xFF000000;
+                int color = bitmap.getRGB(x, y);
+                int alpha = color >>> 24;
+                if(alpha == 0) continue; //We shall not create a ColorLayer for any color that is fully transparent.
                 detections.computeIfAbsent(color, _ -> new ArrayList<>()).add(new IntPoint(x, y));
             }
         }
@@ -33,19 +34,28 @@ class Main{
     }
     public static void main(String[] args) throws Exception{
         final long startTime = System.nanoTime();
-        BufferedImage original = ImageIO.read(new File("TestBitmaps/WeezerSmall.png"));
+        BufferedImage original = ImageIO.read(new File("TestBitmaps/Grinning Goblin.png"));
         final int width = original.getWidth();
         final int height = original.getHeight();
         ColorLayer[] layers = createLayers(original);
         Arrays.sort(layers);
         BitGrid stackedBits = new BitGrid(width, height);
+        BitGrid lastOpaqueBits = new BitGrid(stackedBits);
         for(int i=0; i<layers.length; i++){
             if(i % 100 == 0){
                 System.out.print(i + " ColorLayers chunked.\r");
                 System.out.flush();
             }
-            //Index math necessary: ColorLayers sorted back-to-front, but must be traced front-to-back.
-            layers[layers.length-1-i].generateChildren(stackedBits);
+            int index = layers.length-1-i; //ColorLayers sorted back-to-front, but must be traced front-to-back.
+            layers[index].generateChildren(stackedBits);
+            int alpha = layers[index].color >>> 24;
+            if(alpha == 0xFF){
+                //Fully opaque layer
+                lastOpaqueBits = new BitGrid(stackedBits);
+            } else {
+                //Translucent layer
+                stackedBits = new BitGrid(lastOpaqueBits);
+            }
         }
         System.out.println(layers.length + " ColorLayers chunked.");
         PrintSVG fileOut = new PrintSVG(new File("Testing.svg"), "    ");
