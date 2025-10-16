@@ -1,16 +1,15 @@
 import java.io.*;
 import java.nio.file.Files;
-import java.nio.charset.StandardCharsets;
 
-public class PrintSVG {
+public class ObscurePrint {
     private BufferedWriter bw;
     private final String indentStr;
     private int indentAmount = 0;
     private String indent = "";
     private boolean startOfLine = true;
 
-    public PrintSVG(File output, String indent) throws IOException{
-        bw = Files.newBufferedWriter(output.toPath(), StandardCharsets.UTF_8);
+    public ObscurePrint(File output, String indent) throws IOException{
+        bw = Files.newBufferedWriter(output.toPath()); //UTF-8 implied by unspecified parameter.
         indentStr = indent;
     }
 
@@ -31,7 +30,7 @@ public class PrintSVG {
     }
 
     private void checkClosed() throws IOException{
-        if(bw == null) throw new IOException("Attempting to write to a closed PrintSVG.");
+        if(bw == null) throw new IOException("Attempting to write to a closed ObscurePrint.");
     }
 
     public void print(String input) throws IOException{

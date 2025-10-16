@@ -34,7 +34,7 @@ class Main{
     }
     public static void main(String[] args) throws Exception{
         final long startTime = System.nanoTime();
-        BufferedImage original = ImageIO.read(new File("TestBitmaps/Grinning Goblin.png"));
+        BufferedImage original = ImageIO.read(new File("TestBitmaps/Lakitu.png"));
         final int width = original.getWidth();
         final int height = original.getHeight();
         ColorLayer[] layers = createLayers(original);
@@ -58,7 +58,8 @@ class Main{
             }
         }
         System.out.println(layers.length + " ColorLayers chunked.");
-        PrintSVG fileOut = new PrintSVG(new File("Testing.svg"), "    ");
+        ObscurePrint fileOut = new ObscurePrint(new File("Testing.svg"), "    ");
+        fileOut.println("<?xml version=\"1.0\" encoding=\"UTF-8\"?>");
         fileOut.println("<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"" + width + "\" height=\"" + height + "\" viewBox=\"0 0 " + width + " " + height + "\" shape-rendering=\"crispEdges\" fill-rule=\"evenodd\">");
         fileOut.moreIndent();
         for(int i=0; i<layers.length; i++){

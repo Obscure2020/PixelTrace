@@ -121,7 +121,7 @@ public class Island {
         throw new AssertionError("Every island has at least one upper-left corner. The only way for this exception to trip is some sort of memory corruption or other catastrophic error has occurred.");
     }
 
-    public void pathTrace(PrintSVG out) throws IOException{
+    public void traceSVG(ObscurePrint out) throws IOException{
         IntPoint start = findUpperLeftCorner();
         int prev_x = start.x;
         int prev_y = start.y;
@@ -154,7 +154,7 @@ public class Island {
         out.print(" z");
         for(Island child : children){
             out.print(" ");
-            child.pathTrace(out);
+            child.traceSVG(out);
         }
     }
 }
