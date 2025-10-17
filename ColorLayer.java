@@ -159,7 +159,7 @@ public class ColorLayer implements Comparable<ColorLayer>{
         }
     }
 
-    public void printSVG(ObscurePrint out) throws IOException{
+    public void printSVG(ObscurePrint out) throws IOException {
         String colorSpec = "fill=\"#" + Main.leftPad(Integer.toHexString(color & 0xFFFFFF).toUpperCase(), '0', 6) + "\"";
         int alpha = color >>> 24;
         if(alpha != 0xFF){
@@ -173,5 +173,18 @@ public class ColorLayer implements Comparable<ColorLayer>{
             children[i].traceSVG(out);
         }
         out.println("\" />");
+    }
+
+    //TODO: Remove this.
+    public void printTikZColor(ObscurePrint out) throws IOException {
+        out.print("\\definecolor{pt-");
+        out.print(Main.leftPad(Integer.toHexString(color & 0xFFFFFF).toUpperCase(), '0', 6));
+        out.print("}{RGB}{");
+        out.print((color >>> 16) & 0xFF);
+        out.print(", ");
+        out.print((color >>> 8) & 0xFF);
+        out.print(", ");
+        out.print(color & 0xFF);
+        out.println("}");
     }
 }

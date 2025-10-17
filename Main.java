@@ -1,6 +1,7 @@
 import java.util.*;
 import java.util.Map.Entry;
 import java.io.*;
+import java.nio.file.*;
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
 
@@ -32,6 +33,46 @@ class Main{
         System.out.println(layers.size() + " ColorLayers created.");
         return layers.toArray(new ColorLayer[0]);
     }
+
+    public static void exportSVG(Path destination, String indent, int width, int height, ColorLayer[] layers) throws IOException {
+        ObscurePrint fileOut = new ObscurePrint(destination, indent);
+        fileOut.println("<?xml version=\"1.0\" encoding=\"UTF-8\"?>");
+        fileOut.println("<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"" + width + "\" height=\"" + height + "\" viewBox=\"0 0 " + width + " " + height + "\" shape-rendering=\"crispEdges\" fill-rule=\"evenodd\">");
+        fileOut.moreIndent();
+        for(int i=0; i<layers.length; i++){
+            if(i % 1000 == 0){
+                System.out.print(i + " ColorLayers written.\r");
+                System.out.flush();
+            }
+            layers[i].printSVG(fileOut);
+        }
+        System.out.println(layers.length + " ColorLayers written.");
+        fileOut.lessIndent();
+        fileOut.print("</svg>");
+        fileOut.close();
+    }
+
+    public static void exportTikZ(Path destination, String indent, String scaleTarget, int pixelDim, ColorLayer[] layers) throws IOException {
+        String scaler = "\\dimeval{" + scaleTarget + " / " + pixelDim + "}";
+        ObscurePrint fileOut = new ObscurePrint(destination, indent);
+        fileOut.println("% Ensure that the following package imports");
+        fileOut.println("% are included in your document preamble:");
+        fileOut.println("\\usepackage{tikz}");
+        fileOut.println("\\usepackage{xcolor}");
+        fileOut.println("");
+        fileOut.print("\\begin{tikzpicture}[x=");
+        fileOut.print(scaler);
+        fileOut.print(",y=");
+        fileOut.print(scaler);
+        fileOut.println("]");
+        fileOut.moreIndent();
+        //Ask each layer to print TikZ data, and periodically update on progress.
+        //Print final layer completion tally.
+        fileOut.lessIndent();
+        fileOut.print("\\end{tikzpicture}");
+        fileOut.close();
+    }
+
     public static void main(String[] args) throws Exception{
         final long startTime = System.nanoTime();
         BufferedImage original = ImageIO.read(new File("TestBitmaps/Lakitu.png"));
@@ -58,21 +99,7 @@ class Main{
             }
         }
         System.out.println(layers.length + " ColorLayers chunked.");
-        ObscurePrint fileOut = new ObscurePrint(new File("Testing.svg"), "    ");
-        fileOut.println("<?xml version=\"1.0\" encoding=\"UTF-8\"?>");
-        fileOut.println("<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"" + width + "\" height=\"" + height + "\" viewBox=\"0 0 " + width + " " + height + "\" shape-rendering=\"crispEdges\" fill-rule=\"evenodd\">");
-        fileOut.moreIndent();
-        for(int i=0; i<layers.length; i++){
-            if(i % 1000 == 0){
-                System.out.print(i + " ColorLayers written.\r");
-                System.out.flush();
-            }
-            layers[i].printSVG(fileOut);
-        }
-        System.out.println(layers.length + " ColorLayers written.");
-        fileOut.lessIndent();
-        fileOut.print("</svg>");
-        fileOut.close();
+        exportTikZ(Paths.get("Testing.tex"), "    ", "2in", width, layers);
         final long endTime = System.nanoTime();
         long durationInNanos = endTime - startTime;
         double seconds = durationInNanos / 1_000_000_000.0;

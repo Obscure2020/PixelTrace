@@ -1,5 +1,5 @@
 import java.io.*;
-import java.nio.file.Files;
+import java.nio.file.*;
 
 public class ObscurePrint {
     private BufferedWriter bw;
@@ -8,8 +8,8 @@ public class ObscurePrint {
     private String indent = "";
     private boolean startOfLine = true;
 
-    public ObscurePrint(File output, String indent) throws IOException{
-        bw = Files.newBufferedWriter(output.toPath()); //UTF-8 implied by unspecified parameter.
+    public ObscurePrint(Path output, String indent) throws IOException{
+        bw = Files.newBufferedWriter(output); //UTF-8 implied by unspecified parameter.
         indentStr = indent;
     }
 
