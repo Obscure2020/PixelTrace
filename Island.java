@@ -157,4 +157,38 @@ public class Island {
             child.traceSVG(out);
         }
     }
+
+    public void traceTikZ(ObscurePrint out, final int globalHeight) throws IOException {
+        IntPoint start = findUpperLeftCorner();
+        int cur_x = start.x+1;
+        int cur_y = start.y;
+        int direction = RIGHT;
+        out.print(" (");
+        out.print(global_x_min + start.x);
+        out.print(",");
+        out.print(globalHeight - (global_y_min + start.y));
+        out.print(")");
+        while((cur_x != start.x) || (cur_y != start.y)){
+            int turn = cornerTable.get(direction).getOrDefault(fourSquareVal(cur_x, cur_y), -1);
+            if(turn >= 0){
+                if((direction == DOWN) || (direction == UP)){
+                    out.print(" -| (");
+                    out.print(global_x_min + cur_x);
+                    out.print(",");
+                    out.print(globalHeight - (global_y_min + cur_y));
+                    out.print(")");
+                }
+                direction = turn;
+            }
+            switch(direction) {
+                case RIGHT -> cur_x++;
+                case DOWN -> cur_y++;
+                case LEFT -> cur_x--;
+                case UP -> cur_y--;
+                default -> throw new IllegalStateException("Unexpected value: " + direction);
+            }
+        }
+        out.print(" -| cycle");
+        for(Island child : children) child.traceTikZ(out, globalHeight);
+    }
 }

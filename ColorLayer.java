@@ -175,10 +175,10 @@ public class ColorLayer implements Comparable<ColorLayer>{
         out.println("\" />");
     }
 
-    //TODO: Remove this.
-    public void printTikZColor(ObscurePrint out) throws IOException {
-        out.print("\\definecolor{pt-");
-        out.print(Main.leftPad(Integer.toHexString(color & 0xFFFFFF).toUpperCase(), '0', 6));
+    public void printTikZ(ObscurePrint out, final int globalHeight) throws IOException {
+        final String colorName = "pt-" + Main.leftPad(Integer.toHexString(color & 0xFFFFFF).toUpperCase(), '0', 6);
+        out.print("\\definecolor{");
+        out.print(colorName);
         out.print("}{RGB}{");
         out.print((color >>> 16) & 0xFF);
         out.print(", ");
@@ -186,5 +186,19 @@ public class ColorLayer implements Comparable<ColorLayer>{
         out.print(", ");
         out.print(color & 0xFF);
         out.println("}");
+        out.print("\\fill[");
+        out.print(colorName);
+        final int alpha = color >>> 24;
+        if(alpha != 0xFF){
+            float opacity = ((float) alpha) / 255.0f;
+            out.print(",opacity=" + opacity);
+        }
+        out.print("]");
+        children[0].traceTikZ(out, globalHeight);
+        for(int i=1; i<children.length; i++){
+            out.print(" ");
+            children[i].traceTikZ(out, globalHeight);
+        }
+        out.println(";");
     }
 }

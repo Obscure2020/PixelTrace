@@ -52,7 +52,7 @@ class Main{
         fileOut.close();
     }
 
-    public static void exportTikZ(Path destination, String indent, String scaleTarget, int pixelDim, ColorLayer[] layers) throws IOException {
+    public static void exportTikZ(Path destination, String indent, String scaleTarget, int pixelDim, int globalHeight, ColorLayer[] layers) throws IOException {
         String scaler = "\\dimeval{" + scaleTarget + " / " + pixelDim + "}";
         ObscurePrint fileOut = new ObscurePrint(destination, indent);
         fileOut.println("% Ensure that the following package imports");
@@ -64,10 +64,16 @@ class Main{
         fileOut.print(scaler);
         fileOut.print(",y=");
         fileOut.print(scaler);
-        fileOut.println("]");
+        fileOut.println(",even odd rule]");
         fileOut.moreIndent();
-        //Ask each layer to print TikZ data, and periodically update on progress.
-        //Print final layer completion tally.
+        for(int i=0; i<layers.length; i++){
+            if(i % 1000 == 0){
+                System.out.print(i + " ColorLayers written.\r");
+                System.out.flush();
+            }
+            layers[i].printTikZ(fileOut, globalHeight);
+        }
+        System.out.println(layers.length + " ColorLayers written.");
         fileOut.lessIndent();
         fileOut.print("\\end{tikzpicture}");
         fileOut.close();
@@ -99,7 +105,7 @@ class Main{
             }
         }
         System.out.println(layers.length + " ColorLayers chunked.");
-        exportTikZ(Paths.get("Testing.tex"), "    ", "2in", width, layers);
+        exportTikZ(Paths.get("Testing.tex"), "    ", "2in", width, height, layers);
         final long endTime = System.nanoTime();
         long durationInNanos = endTime - startTime;
         double seconds = durationInNanos / 1_000_000_000.0;
