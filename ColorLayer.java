@@ -8,35 +8,28 @@ public class ColorLayer implements Comparable<ColorLayer>{
     private final int y_min;
     private final int y_max;
     private final long bounding_area;
-    private final long pixel_count;
+    private final int pixel_count;
     private final BitGrid mask;
     private Island[] children;
 
     private static final Island[] EMPTY_ISLANDS = new Island[0];
 
-    public ColorLayer(int new_color, List<IntPoint> detections){
+    public ColorLayer(int new_color, IntPointQueue detections){
         color = new_color;
-        int temp_x_min = Integer.MAX_VALUE;
-        int temp_x_max = Integer.MIN_VALUE;
-        int temp_y_min = Integer.MAX_VALUE;
-        int temp_y_max = Integer.MIN_VALUE;
-        for(IntPoint p : detections){
-            temp_x_min = Math.min(temp_x_min, p.x);
-            temp_x_max = Math.max(temp_x_max, p.x);
-            temp_y_min = Math.min(temp_y_min, p.y);
-            temp_y_max = Math.max(temp_y_max, p.y);
-        }
-        x_min = temp_x_min;
-        x_max = temp_x_max;
-        y_min = temp_y_min;
-        y_max = temp_y_max;
+        x_min = detections.x_min();
+        x_max = detections.x_max();
+        y_min = detections.y_min();
+        y_max = detections.y_max();
         pixel_count = detections.size();
         long width = (x_max - x_min) + 1;
         long height = (y_max - y_min) + 1;
         bounding_area = width * height;
         mask = new BitGrid((int) width, (int) height);
-        for(IntPoint p : detections){
-            mask.setBit(p.x-x_min, p.y-y_min, true);
+        while(!detections.isEmpty()){
+            long packed_point = detections.pollPacked();
+            int x = (int) (packed_point >>> 32);
+            int y = (int) packed_point;
+            mask.setBit(x-x_min, y-y_min, true);
         }
         children = EMPTY_ISLANDS;
     }
@@ -77,7 +70,7 @@ public class ColorLayer implements Comparable<ColorLayer>{
         if(alpha_compare == 0){
             int area_compare = Long.compare(other.bounding_area, bounding_area); //Greater area is further towards the back
             if(area_compare == 0){
-                int count_compare = Long.compare(other.pixel_count, pixel_count); //Greater pixel count is further towards the back
+                int count_compare = Integer.compare(other.pixel_count, pixel_count); //Greater pixel count is further towards the back
                 if(count_compare == 0){
                     return Integer.compareUnsigned(color & 0xFFFFFF, other.color & 0xFFFFFF); //Darker color is further towards the back
                 }

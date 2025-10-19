@@ -56,7 +56,7 @@ public class IntQueue {
         return result;
     }
 
-    public final boolean isEmpty(){
+    public boolean isEmpty(){
         return head == tail;
     }
 

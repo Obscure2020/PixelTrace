@@ -1,5 +1,4 @@
 import java.util.*;
-import java.util.Map.Entry;
 import java.io.*;
 import java.nio.file.*;
 import javax.imageio.ImageIO;
@@ -17,17 +16,17 @@ class Main{
     private static ColorLayer[] createLayers(BufferedImage bitmap){
         final int width = bitmap.getWidth();
         final int height = bitmap.getHeight();
-        HashMap<Integer, ArrayList<IntPoint>> detections = new HashMap<>();
+        HashMap<Integer, IntPointQueue> detections = new HashMap<>();
         for(int y=0; y<height; y++){
             for(int x=0; x<width; x++){
                 int color = bitmap.getRGB(x, y);
                 int alpha = color >>> 24;
                 if(alpha == 0) continue; //We shall not create a ColorLayer for any color that is fully transparent.
-                detections.computeIfAbsent(color, _ -> new ArrayList<>()).add(new IntPoint(x, y));
+                detections.computeIfAbsent(color, _ -> new IntPointQueue()).add(x, y);
             }
         }
         ArrayList<ColorLayer> layers = new ArrayList<>();
-        for(Entry<Integer, ArrayList<IntPoint>> item : detections.entrySet()){
+        for(Map.Entry<Integer, IntPointQueue> item : detections.entrySet()){
             layers.add(new ColorLayer(item.getKey(), item.getValue()));
         }
         System.out.println(layers.size() + " ColorLayers created.");
@@ -105,7 +104,8 @@ class Main{
             }
         }
         System.out.println(layers.length + " ColorLayers chunked.");
-        exportTikZ(Paths.get("Testing.tex"), "    ", "2in", width, height, layers);
+        //exportTikZ(Paths.get("Testing.tex"), "    ", "2in", width, height, layers);
+        exportSVG(Paths.get("Testing.svg"), "    ", width, height, layers);
         final long endTime = System.nanoTime();
         long durationInNanos = endTime - startTime;
         double seconds = durationInNanos / 1_000_000_000.0;
