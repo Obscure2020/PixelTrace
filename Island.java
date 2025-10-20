@@ -110,11 +110,11 @@ public class Island {
         return topLeft | top | left | center;
     }
 
-    private IntPoint findUpperLeftCorner(){
+    private long findUpperLeftCorner(){
         for(int y=0; y<pixels.height; y++){
             for(int x=0; x<pixels.width; x++){
                 if(fourSquareVal(x, y) == 1){
-                    return new IntPoint(x, y);
+                    return (((long) x) << 32) | Integer.toUnsignedLong(y);
                 }
             }
         }
@@ -122,14 +122,16 @@ public class Island {
     }
 
     public void traceSVG(ObscurePrint out) throws IOException{
-        IntPoint start = findUpperLeftCorner();
-        int prev_x = start.x;
-        int prev_y = start.y;
-        int cur_x = start.x+1;
-        int cur_y = start.y;
+        long start = findUpperLeftCorner();
+        int start_x = (int) (start >>> 32);
+        int start_y = (int) start;
+        int prev_x = start_x;
+        int prev_y = start_y;
+        int cur_x = start_x+1;
+        int cur_y = start_y;
         int direction = RIGHT;
-        out.print("M " + (global_x_min + start.x) + " " + (global_y_min + start.y));
-        while((cur_x != start.x) || (cur_y != start.y)){
+        out.print("M " + (global_x_min + start_x) + " " + (global_y_min + start_y));
+        while((cur_x != start_x) || (cur_y != start_y)){
             int turn = cornerTable.get(direction).getOrDefault(fourSquareVal(cur_x, cur_y), -1);
             if(turn >= 0){
                 if((direction == RIGHT) || (direction == LEFT)){ //Horizontal Line
@@ -159,16 +161,18 @@ public class Island {
     }
 
     public void traceTikZ(ObscurePrint out, final int globalHeight) throws IOException {
-        IntPoint start = findUpperLeftCorner();
-        int cur_x = start.x+1;
-        int cur_y = start.y;
+        long start = findUpperLeftCorner();
+        int start_x = (int) (start >>> 32);
+        int start_y = (int) start;
+        int cur_x = start_x+1;
+        int cur_y = start_y;
         int direction = RIGHT;
         out.print(" (");
-        out.print(global_x_min + start.x);
+        out.print(global_x_min + start_x);
         out.print(",");
-        out.print(globalHeight - (global_y_min + start.y));
+        out.print(globalHeight - (global_y_min + start_y));
         out.print(")");
-        while((cur_x != start.x) || (cur_y != start.y)){
+        while((cur_x != start_x) || (cur_y != start_y)){
             int turn = cornerTable.get(direction).getOrDefault(fourSquareVal(cur_x, cur_y), -1);
             if(turn >= 0){
                 if((direction == DOWN) || (direction == UP)){

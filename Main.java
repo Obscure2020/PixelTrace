@@ -33,7 +33,7 @@ class Main{
         return layers.toArray(new ColorLayer[0]);
     }
 
-    public static void exportSVG(Path destination, String indent, int width, int height, ColorLayer[] layers) throws IOException {
+    private static void exportSVG(Path destination, String indent, int width, int height, ColorLayer[] layers) throws IOException {
         ObscurePrint fileOut = new ObscurePrint(destination, indent);
         fileOut.println("<?xml version=\"1.0\" encoding=\"UTF-8\"?>");
         fileOut.println("<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"" + width + "\" height=\"" + height + "\" viewBox=\"0 0 " + width + " " + height + "\" shape-rendering=\"crispEdges\" fill-rule=\"evenodd\">");
@@ -51,7 +51,7 @@ class Main{
         fileOut.close();
     }
 
-    public static void exportTikZ(Path destination, String indent, String scaleTarget, int pixelDim, int globalHeight, ColorLayer[] layers) throws IOException {
+    private static void exportTikZ(Path destination, String indent, String scaleTarget, int pixelDim, int globalHeight, ColorLayer[] layers) throws IOException {
         String scaler = "\\dimeval{" + scaleTarget + " / " + pixelDim + "}";
         ObscurePrint fileOut = new ObscurePrint(destination, indent);
         fileOut.println("% Ensure that the following package imports");
@@ -104,8 +104,8 @@ class Main{
             }
         }
         System.out.println(layers.length + " ColorLayers chunked.");
-        //exportTikZ(Paths.get("Testing.tex"), "    ", "2in", width, height, layers);
         exportSVG(Paths.get("Testing.svg"), "    ", width, height, layers);
+        //exportTikZ(Paths.get("Testing.tex"), "    ", "2in", width, height, layers);
         final long endTime = System.nanoTime();
         long durationInNanos = endTime - startTime;
         double seconds = durationInNanos / 1_000_000_000.0;

@@ -1,82 +1,95 @@
 public class IntPointQueue {
-    private IntQueue back;
+    private long[] arr;
+    private int head = 0;
+    private int tail = 0;
     private int x_min = Integer.MAX_VALUE;
     private int x_max = Integer.MIN_VALUE;
     private int y_min = Integer.MAX_VALUE;
     private int y_max = Integer.MIN_VALUE;
 
     public IntPointQueue(int capacity){
-        back = new IntQueue(Math.max(capacity, 4) << 1);
+        arr = new long[Math.max(capacity, 4)]; //Four seems a sane minimum capacity to me.
     }
 
     public IntPointQueue(){
         this(32);
     }
 
-    public void add(IntPoint pt){
-        int x = pt.x;
-        int y = pt.y;
+    private int wrapIncrement(int i){
+        i++;
+        //Note for future maintainers:
+        //Thou shalt NOT replace the following with a modulo.
+        //This is MEASURABLY faster.
+        //Sincerely, Obscure (Joey)
+        return (i >= arr.length) ? 0 : i;
+    }
+
+    public void add(final int x, final int y){
         if(x < x_min) x_min = x;
         if(x > x_max) x_max = x;
         if(y < y_min) y_min = y;
         if(y > y_max) y_max = y;
-        back.add(x, y);
+        add( (((long) x) << 32) | Integer.toUnsignedLong(y) );
     }
 
-    public void add(int x, int y){
-        if(x < x_min) x_min = x;
-        if(x > x_max) x_max = x;
-        if(y < y_min) y_min = y;
-        if(y > y_max) y_max = y;
-        back.add(x, y);
-    }
-
-    public IntPoint poll(){
-        int back_size = back.size();
-        if(back_size == 0){
-            throw new IllegalStateException("IntPointQueue is empty.");
-        } else if((back_size & 1) == 1){
-            throw new IllegalStateException("Internal IntQueue has an odd number of elements??");
+    public void add(final long cell){
+        //Potentially useful if IntPointQueue needs to be used as a "LongQueue."
+        //This method does not do min/max checking, as that data might be quite
+        //irrelevant to such a theoretical use-case.
+        if(wrapIncrement(tail) == head){
+            long[] newArr = new long[arr.length + Math.max(arr.length>>1, 4)];
+            if(head < tail){
+                //Queue contents are not wrapped around the edge.
+                int len = tail - head;
+                System.arraycopy(arr, head, newArr, 0, len);
+                tail = len;
+            } else {
+                //Queue contents are wrapped around the edge, and will now be un-wrapped.
+                int headLen = arr.length - head;
+                System.arraycopy(arr, head, newArr, 0, headLen);
+                System.arraycopy(arr, 0, newArr, headLen, tail);
+                tail = tail + headLen;
+            }
+            head = 0;
+            arr = newArr;
         }
-        return new IntPoint(back.poll(), back.poll());
+        arr[tail] = cell;
+        tail = wrapIncrement(tail);
     }
 
-    public long pollPacked(){
-        int back_size = back.size();
-        if(back_size == 0){
+    public long poll(){
+        if(isEmpty()){
             throw new IllegalStateException("IntPointQueue is empty.");
-        } else if((back_size & 1) == 1){
-            throw new IllegalStateException("Internal IntQueue has an odd number of elements??");
         }
-        long x_part = ((long) back.poll()) << 32;
-        long y_part = Integer.toUnsignedLong(back.poll());
-        return x_part | y_part;
+        long result = arr[head];
+        head = wrapIncrement(head);
+        return result;
     }
 
     public boolean isEmpty(){
-        return back.isEmpty();
+        return head == tail;
     }
 
     public int size(){
-        return back.size() >> 1;
+        int diff = tail - head;
+        return (diff < 0) ? diff + arr.length : diff;
     }
 
-    //Only guaranteed to be correct BEFORE any polls are performed.
+    //The following four methods are only guaranteed to return
+    //correct results BEFORE any polls are performed.
+
     public int x_min(){
         return x_min;
     }
 
-    //Only guaranteed to be correct BEFORE any polls are performed.
     public int x_max(){
         return x_max;
     }
 
-    //Only guaranteed to be correct BEFORE any polls are performed.
     public int y_min(){
         return y_min;
     }
 
-    //Only guaranteed to be correct BEFORE any polls are performed.
     public int y_max(){
         return y_max;
     }

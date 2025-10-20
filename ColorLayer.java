@@ -26,7 +26,7 @@ public class ColorLayer implements Comparable<ColorLayer>{
         bounding_area = width * height;
         mask = new BitGrid((int) width, (int) height);
         while(!detections.isEmpty()){
-            long packed_point = detections.pollPacked();
+            long packed_point = detections.poll();
             int x = (int) (packed_point >>> 32);
             int y = (int) packed_point;
             mask.setBit(x-x_min, y-y_min, true);
