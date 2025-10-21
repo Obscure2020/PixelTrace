@@ -53,7 +53,7 @@ public class IntPointQueueBounded {
 
     public long poll(){
         if(isEmpty()){
-            throw new IllegalStateException("IntPointQueue is empty.");
+            throw new IllegalStateException("IntPointQueueBounded is empty.");
         }
         long result = arr[head];
         head = wrapIncrement(head);
