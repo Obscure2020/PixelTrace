@@ -17,7 +17,7 @@ public class IntPointQueueBounded extends IntPointQueue {
         if(x > x_max) x_max = x;
         if(y < y_min) y_min = y;
         if(y > y_max) y_max = y;
-		super.add(x, y);
+        super.add(x, y);
     }
 
     //The following four methods are only guaranteed to return
