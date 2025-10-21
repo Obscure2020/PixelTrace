@@ -69,32 +69,37 @@ public class Island {
             }
         }
         children = new Island[childCount];
+        int[] child_x_min = new int[childCount];
+        Arrays.fill(child_x_min, width);
+        int[] child_x_max = new int[childCount];
+        Arrays.fill(child_x_max, -1);
+        int[] child_y_min = new int[childCount];
+        Arrays.fill(child_y_min, height);
+        int[] child_y_max = new int[childCount];
+        Arrays.fill(child_y_max, -1);
+        for(int y=0; y<height; y++){
+            for(int x=0; x<width; x++){
+                int id = grid[y][x];
+                if(id >= 0){
+                    child_x_min[id] = Math.min(child_x_min[id], x);
+                    child_x_max[id] = Math.max(child_x_max[id], x);
+                    child_y_min[id] = Math.min(child_y_min[id], y);
+                    child_y_max[id] = Math.max(child_y_max[id], y);
+                }
+            }
+        }
         for(int i=0; i<childCount; i++){
-            int local_x_min = width;
-            int local_x_max = -1;
-            int local_y_min = height;
-            int local_y_max = -1;
-            for(int y=0; y<height; y++){
-                for(int x=0; x<width; x++){
-                    if(grid[y][x] == i){
-                        local_x_min = Math.min(local_x_min, x);
-                        local_x_max = Math.max(local_x_max, x);
-                        local_y_min = Math.min(local_y_min, y);
-                        local_y_max = Math.max(local_y_max, y);
-                    }
-                }
-            }
-            int child_width = (local_x_max - local_x_min) + 1;
-            int child_height = (local_y_max - local_y_min) + 1;
+            int child_width = (child_x_max[i] - child_x_min[i]) + 1;
+            int child_height = (child_y_max[i] - child_y_min[i]) + 1;
             BitGrid childBits = new BitGrid(child_width, child_height);
-            for(int y=local_y_min; y<=local_y_max; y++){
-                for(int x=local_x_min; x<=local_x_max; x++){
+            for(int y=child_y_min[i]; y<=child_y_max[i]; y++){
+                for(int x=child_x_min[i]; x<=child_x_max[i]; x++){
                     if(grid[y][x] == i){
-                        childBits.setBit(x-local_x_min, y-local_y_min, true);
+                        childBits.setBit(x-child_x_min[i], y-child_y_min[i], true);
                     }
                 }
             }
-            children[i] = new Island(local_x_min + global_x_min, local_y_min + global_y_min, childBits, false);
+            children[i] = new Island(child_x_min[i] + global_x_min, child_y_min[i] + global_y_min, childBits, false);
         }
     }
 
