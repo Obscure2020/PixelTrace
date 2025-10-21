@@ -16,17 +16,17 @@ class Main{
     private static ColorLayer[] createLayers(BufferedImage bitmap){
         final int width = bitmap.getWidth();
         final int height = bitmap.getHeight();
-        HashMap<Integer, IntPointQueue> detections = new HashMap<>();
+        HashMap<Integer, IntPointQueueBounded> detections = new HashMap<>();
         for(int y=0; y<height; y++){
             for(int x=0; x<width; x++){
                 int color = bitmap.getRGB(x, y);
                 int alpha = color >>> 24;
                 if(alpha == 0) continue; //We shall not create a ColorLayer for any color that is fully transparent.
-                detections.computeIfAbsent(color, _ -> new IntPointQueue()).add(x, y);
+                detections.computeIfAbsent(color, _ -> new IntPointQueueBounded()).add(x, y);
             }
         }
         ArrayList<ColorLayer> layers = new ArrayList<>();
-        for(Map.Entry<Integer, IntPointQueue> item : detections.entrySet()){
+        for(Map.Entry<Integer, IntPointQueueBounded> item : detections.entrySet()){
             layers.add(new ColorLayer(item.getKey(), item.getValue()));
         }
         System.out.println(layers.size() + " ColorLayers created.");

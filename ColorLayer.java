@@ -14,7 +14,7 @@ public class ColorLayer implements Comparable<ColorLayer>{
 
     private static final Island[] EMPTY_ISLANDS = new Island[0];
 
-    public ColorLayer(int new_color, IntPointQueue detections){
+    public ColorLayer(int new_color, IntPointQueueBounded detections){
         color = new_color;
         x_min = detections.x_min();
         x_max = detections.x_max();

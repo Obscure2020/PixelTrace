@@ -1,13 +1,17 @@
-public class IntPointQueue {
+public class IntPointQueueBounded {
     private long[] arr;
     private int head = 0;
     private int tail = 0;
+    private int x_min = Integer.MAX_VALUE;
+    private int x_max = Integer.MIN_VALUE;
+    private int y_min = Integer.MAX_VALUE;
+    private int y_max = Integer.MIN_VALUE;
 
-    public IntPointQueue(int capacity){
+    public IntPointQueueBounded(int capacity){
         arr = new long[Math.max(capacity, 4)]; //Four seems a sane minimum capacity to me.
     }
 
-    public IntPointQueue(){
+    public IntPointQueueBounded(){
         this(32);
     }
 
@@ -21,6 +25,10 @@ public class IntPointQueue {
     }
 
     public void add(final int x, final int y){
+        if(x < x_min) x_min = x;
+        if(x > x_max) x_max = x;
+        if(y < y_min) y_min = y;
+        if(y > y_max) y_max = y;
         final long cell = (((long) x) << 32) | Integer.toUnsignedLong(y);
         if(wrapIncrement(tail) == head){
             long[] newArr = new long[arr.length + Math.max(arr.length>>1, 4)];
@@ -59,5 +67,24 @@ public class IntPointQueue {
     public int size(){
         int diff = tail - head;
         return (diff < 0) ? diff + arr.length : diff;
+    }
+
+    //The following four methods are only guaranteed to return
+    //correct results BEFORE any polls are performed.
+
+    public int x_min(){
+        return x_min;
+    }
+
+    public int x_max(){
+        return x_max;
+    }
+
+    public int y_min(){
+        return y_min;
+    }
+
+    public int y_max(){
+        return y_max;
     }
 }
