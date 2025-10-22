@@ -4,3 +4,8 @@
 *.ini
 *.synctex.gz
 *.pdf
+
+.idea/
+out/
+*.iml
+.DS_Store
