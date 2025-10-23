@@ -81,18 +81,6 @@ public class ColorLayer implements Comparable<ColorLayer>{
         return alpha_compare;
     }
 
-    private int[] getMatchedIslands(int[][] grid){
-        BitSet matchedIslands = new BitSet();
-        for(int y=0; y<mask.height; y++){
-            for(int x=0; x<mask.width; x++){
-                if(mask.getBit(x, y)){
-                    matchedIslands.set(grid[y][x]);
-                }
-            }
-        }
-        return matchedIslands.stream().toArray(); //Useful to note that BitSet::stream() returns items in sorted order.
-    }
-
     public void generateChildren(BitGrid prevMask){
         int[][] grid = new int[mask.height][mask.width];
         for(int global_y=y_min; global_y<=y_max; global_y++){
@@ -109,9 +97,23 @@ public class ColorLayer implements Comparable<ColorLayer>{
                 grid[local_y][local_x] = marked ? -1 : -2;
             }
         }
-        ConnectedComponents.enumerate(grid, -1);
-        int[] validIslands = getMatchedIslands(grid);
-        final int childCount = validIslands.length;
+        final int childCountUnchecked = ConnectedComponents.enumerate(grid, -1);
+        int[] childIndices = new int[childCountUnchecked];
+        Arrays.fill(childIndices, -1);
+        int childCount = 0;
+        for(int y=0; y<mask.height; y++){
+            for(int x=0; x<mask.width; x++){
+                if(mask.getBit(x, y)){
+                    final int oldId = grid[y][x];
+                    if(childIndices[oldId] < 0){
+                        childIndices[oldId] = childCount;
+                        childCount++;
+                        if(childCount == childCountUnchecked) break;
+                    }
+                }
+            }
+            if(childCount == childCountUnchecked) break;
+        }
         children = new Island[childCount];
         int[] child_x_min = new int[childCount];
         Arrays.fill(child_x_min, mask.width);
@@ -125,7 +127,7 @@ public class ColorLayer implements Comparable<ColorLayer>{
             for(int x=0; x<mask.width; x++){
                 final int id = grid[y][x];
                 if(id >= 0){
-                    final int index = Arrays.binarySearch(validIslands, id);
+                    final int index = childIndices[id];
                     if(index >= 0){
                         child_x_min[index] = Math.min(child_x_min[index], x);
                         child_x_max[index] = Math.max(child_x_max[index], x);
@@ -135,18 +137,20 @@ public class ColorLayer implements Comparable<ColorLayer>{
                 }
             }
         }
-        for(int i=0; i<childCount; i++){
-            int child_width = (child_x_max[i] - child_x_min[i]) + 1;
-            int child_height = (child_y_max[i] - child_y_min[i]) + 1;
+        for(int i=0; i<childCountUnchecked; i++){
+            final int index = childIndices[i];
+            if(index < 0) continue;
+            int child_width = (child_x_max[index] - child_x_min[index]) + 1;
+            int child_height = (child_y_max[index] - child_y_min[index]) + 1;
             BitGrid childBits = new BitGrid(child_width, child_height);
-            for(int y=child_y_min[i]; y<=child_y_max[i]; y++){
-                for(int x=child_x_min[i]; x<=child_x_max[i]; x++){
-                    if(grid[y][x] == validIslands[i]){
-                        childBits.setBit(x-child_x_min[i], y-child_y_min[i], true);
+            for(int y=child_y_min[index]; y<=child_y_max[index]; y++){
+                for(int x=child_x_min[index]; x<=child_x_max[index]; x++){
+                    if(grid[y][x] == i){
+                        childBits.setBit(x-child_x_min[index], y-child_y_min[index], true);
                     }
                 }
             }
-            children[i] = new Island(child_x_min[i] + x_min, child_y_min[i] + y_min, childBits, true);
+            children[index] = new Island(child_x_min[index] + x_min, child_y_min[index] + y_min, childBits, true);
         }
     }
 

@@ -1,5 +1,5 @@
 public class ConnectedComponents {
-    public static void enumerate(int[][] grid, int target){
+    public static int enumerate(int[][] grid, int target){
         EqualityTracker tracker = new EqualityTracker();
         int islandCount = 0;
         final int height = grid.length;
@@ -23,11 +23,17 @@ public class ConnectedComponents {
             }
         }
         int[] groups = tracker.groupReport();
+        int maxFinalId = Integer.MIN_VALUE;
         for(int y=0; y<height; y++){
             for(int x=0; x<width; x++){
                 final int old = grid[y][x];
-                if(old >= 0) grid[y][x] = groups[old];
+                if(old >= 0){
+                    final int replace = groups[old];
+                    grid[y][x] = replace;
+                    if(replace > maxFinalId) maxFinalId = replace;
+                }
             }
         }
+        return maxFinalId + 1;
     }
 }
