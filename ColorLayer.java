@@ -97,22 +97,21 @@ public class ColorLayer implements Comparable<ColorLayer>{
                 grid[local_y][local_x] = marked ? -1 : -2;
             }
         }
-        final int childCountUnchecked = ConnectedComponents.enumerate(grid, -1);
+        final int childCountUnchecked = ConnectedComponents.fourNeighborEnumerate(grid, -1);
         int[] childIndices = new int[childCountUnchecked];
         Arrays.fill(childIndices, -1);
         int childCount = 0;
-        for(int y=0; y<mask.height; y++){
+        y_scan: for(int y=0; y<mask.height; y++){
             for(int x=0; x<mask.width; x++){
                 if(mask.getBit(x, y)){
                     final int oldId = grid[y][x];
                     if(childIndices[oldId] < 0){
                         childIndices[oldId] = childCount;
                         childCount++;
-                        if(childCount == childCountUnchecked) break;
+                        if(childCount == childCountUnchecked) break y_scan;
                     }
                 }
             }
-            if(childCount == childCountUnchecked) break;
         }
         children = new Island[childCount];
         int[] child_x_min = new int[childCount];
