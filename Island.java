@@ -47,20 +47,6 @@ public class Island {
         if(!remainingWork) return;
 
         final int childCount = ConnectedComponents.fourNeighborEnumerate(grid, -1);
-        // try{
-        //     ObscurePrint op = new ObscurePrint(java.nio.file.Paths.get("ZZZ_Testing_003.csv"), "    ");
-        //     for(int y=0; y<height; y++){
-        //         op.print(grid[y][0]);
-        //         for(int x=1; x<width; x++){
-        //             op.print(", ");
-        //             op.print(grid[y][x]);
-        //         }
-        //         op.println("");
-        //     }
-        //     op.close();
-        // } catch (Exception e){
-        //     e.printStackTrace(System.out);
-        // }
         children = new Island[childCount];
         int[] child_x_min = new int[childCount];
         Arrays.fill(child_x_min, width);
@@ -103,21 +89,6 @@ public class Island {
         validSet.set(0, numGroups);
         final int height = grid.length;
         final int width = grid[0].length;
-        //TODO: Remove the following testing clause.
-        // try{
-        //     ObscurePrint op = new ObscurePrint(java.nio.file.Paths.get("ZZZ_Testing_001.csv"), "    ");
-        //     for(int y=0; y<height; y++){
-        //         op.print(grid[y][0]);
-        //         for(int x=1; x<width; x++){
-        //             op.print(", ");
-        //             op.print(grid[y][x]);
-        //         }
-        //         op.println("");
-        //     }
-        //     op.close();
-        // } catch (Exception e){
-        //     e.printStackTrace(System.out);
-        // }
         for(int x=0; x<width; x++){
             final int top = grid[0][x];
             final int bottom = grid[height-1][x];
@@ -140,21 +111,6 @@ public class Island {
                 }
             }
         }
-        //TODO: Remove the following testing clause.
-        // try{
-        //     ObscurePrint op = new ObscurePrint(java.nio.file.Paths.get("ZZZ_Testing_002.csv"), "    ");
-        //     for(int y=0; y<height; y++){
-        //         op.print(grid[y][0]);
-        //         for(int x=1; x<width; x++){
-        //             op.print(", ");
-        //             op.print(grid[y][x]);
-        //         }
-        //         op.println("");
-        //     }
-        //     op.close();
-        // } catch (Exception e){
-        //     e.printStackTrace(System.out);
-        // }
         return true;
     }
 
