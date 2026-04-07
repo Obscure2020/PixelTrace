@@ -36,7 +36,9 @@ class Main{
     private static void exportSVG(Path destination, String indent, int width, int height, ColorLayer[] layers) throws IOException {
         ObscurePrint fileOut = new ObscurePrint(destination, indent);
         fileOut.println("<?xml version=\"1.0\" encoding=\"UTF-8\"?>");
-        fileOut.println("<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"" + width + "\" height=\"" + height + "\" viewBox=\"0 0 " + width + " " + height + "\" shape-rendering=\"crispEdges\" fill-rule=\"evenodd\">");
+        fileOut.println("<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"" + width + "\" height=\"" + height + "\" viewBox=\"0 0 " + width + " " + height + "\">");
+        fileOut.moreIndent();
+        fileOut.println("<g shape-rendering=\"crispEdges\" fill-rule=\"evenodd\">");
         fileOut.moreIndent();
         for(int i=0; i<layers.length; i++){
             if(i % 1000 == 0){
@@ -46,6 +48,8 @@ class Main{
             layers[i].printSVG(fileOut);
         }
         System.out.println(layers.length + " ColorLayers written.");
+        fileOut.lessIndent();
+        fileOut.println("</g>");
         fileOut.lessIndent();
         fileOut.print("</svg>");
         fileOut.close();
@@ -104,8 +108,8 @@ class Main{
             }
         }
         System.out.println(layers.length + " ColorLayers chunked.");
-        exportSVG(Paths.get("Testing.svg"), "    ", width, height, layers);
-        //exportTikZ(Paths.get("Testing.tex"), "    ", "2in", width, height, layers);
+        exportSVG(Paths.get("Testing.svg"), "\t", width, height, layers);
+        // exportTikZ(Paths.get("Testing.tex"), "    ", "2in", width, height, layers);
         final long endTime = System.nanoTime();
         long durationInNanos = endTime - startTime;
         double seconds = durationInNanos / 1_000_000_000.0;

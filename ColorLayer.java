@@ -166,7 +166,7 @@ public class ColorLayer implements Comparable<ColorLayer>{
             out.print(" ");
             children[i].traceSVG(out);
         }
-        out.println("\" />");
+        out.println("\"/>");
     }
 
     public void printTikZ(ObscurePrint out, final int globalHeight) throws IOException {
