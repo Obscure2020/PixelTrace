@@ -15,3 +15,8 @@ The only things that remain to be done are potentially parallelizing some of the
 After several instances of needing to include PixelTrace results in PDF files I've constructed with $\rm\LaTeX$, I've gotten tired of taking PixelTrace SVGs and feeding them through [svg2tikz](https://github.com/xyz2tex/svg2tikz). I realized I could produce much more abbreviated and condensed Ti*k*Z syntax if I simply support Ti*k*Z export as a first-party feature of PixelTrace.
 
 So that's what I'll be working on next. After that, I'll revisit my original idea of providing a simple GUI to make PixelTrace easy to use quickly.
+
+## Update: Apr 14, 2026
+Significant runtime speedup and memory usage reduction now implemented. The potential for some parallelization that I mentioned back in 2024 has now been realized. Further optimizations may yet come, but would basically just be for the fun of the game at this point, only displaying appreciable effects in improving the experience of tracing large images with tens of thousands of distinct colors (or more), which wasn't the intended use-case for this software to begin with.
+
+The next major move is to begin work on the small GUI front-end that I've long intended this project to have. I hope to begin work on this in earnest at some point in the next 12 months.
