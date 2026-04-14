@@ -3,6 +3,7 @@ import java.io.*;
 import java.nio.file.*;
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
+import java.util.concurrent.atomic.AtomicInteger;
 
 class Main{
     public static String leftPad(String original, char pad, int minLength){
@@ -31,6 +32,28 @@ class Main{
         }
         System.out.println(layers.size() + " ColorLayers created.");
         return layers.toArray(new ColorLayer[0]);
+    }
+
+    private static void initStackedMasks(ColorLayer[] layers, BitGrid stackedBits){
+        BitGrid lastOpaqueBits = new BitGrid(stackedBits);
+        for(int i=0; i<layers.length; i++){
+            if(i % 100 == 0){
+                System.out.print(i + " ColorLayers mask-stacked.\r");
+                System.out.flush();
+            }
+            final int index = layers.length-1-i; //ColorLayers must be stacked front-to-back to allow underlaps.
+            ColorLayer layer = layers[index];
+            layer.ingestStackMask(stackedBits);
+            final int alpha = layer.color >>> 24;
+            if(alpha == 0xFF){
+                //Fully opaque layers
+                lastOpaqueBits = new BitGrid(stackedBits);
+            } else {
+                //Translucent layers
+                stackedBits = new BitGrid(lastOpaqueBits);
+            }
+        }
+        System.out.println(layers.length + " ColorLayers mask-stacked.");
     }
 
     private static void exportSVG(Path destination, String indent, int width, int height, ColorLayer[] layers) throws IOException {
@@ -88,26 +111,16 @@ class Main{
         final int width = original.getWidth();
         final int height = original.getHeight();
         ColorLayer[] layers = createLayers(original);
+        System.gc();
         Arrays.sort(layers);
-        BitGrid stackedBits = new BitGrid(width, height);
-        BitGrid lastOpaqueBits = new BitGrid(stackedBits);
-        for(int i=0; i<layers.length; i++){
-            if(i % 100 == 0){
-                System.out.print(i + " ColorLayers chunked.\r");
-                System.out.flush();
-            }
-            int index = layers.length-1-i; //ColorLayers sorted back-to-front, but must be traced front-to-back.
-            layers[index].generateChildren(stackedBits);
-            int alpha = layers[index].color >>> 24;
-            if(alpha == 0xFF){
-                //Fully opaque layer
-                lastOpaqueBits = new BitGrid(stackedBits);
-            } else {
-                //Translucent layer
-                stackedBits = new BitGrid(lastOpaqueBits);
-            }
+        initStackedMasks(layers, new BitGrid(width, height));
+        System.gc();
+        AtomicInteger progress_count = new AtomicInteger(0);
+        Arrays.stream(layers).parallel().unordered().forEach(l -> l.generateChildren(progress_count));
+        synchronized(System.out){
+            System.out.println(layers.length + " ColorLayers chunked.");
         }
-        System.out.println(layers.length + " ColorLayers chunked.");
+        System.gc();
         exportSVG(Paths.get("Testing.svg"), "\t", width, height, layers);
         // exportTikZ(Paths.get("Testing.tex"), "    ", "2in", width, height, layers);
         final long endTime = System.nanoTime();

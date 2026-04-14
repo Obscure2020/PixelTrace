@@ -1,5 +1,6 @@
 import java.io.IOException;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class ColorLayer implements Comparable<ColorLayer>{
     public final int color;
@@ -10,6 +11,7 @@ public class ColorLayer implements Comparable<ColorLayer>{
     private final long bounding_area;
     private final int pixel_count;
     private final BitGrid mask;
+    private BitGrid stacked_mask = null;
     private Island[] children;
 
     private static final Island[] EMPTY_ISLANDS = new Island[0];
@@ -81,20 +83,35 @@ public class ColorLayer implements Comparable<ColorLayer>{
         return alpha_compare;
     }
 
-    public void generateChildren(BitGrid prevMask){
-        int[][] grid = new int[mask.height][mask.width];
+    public void ingestStackMask(BitGrid prevMask){
+        BitGrid stack_temp = new BitGrid(mask);
         for(int global_y=y_min; global_y<=y_max; global_y++){
             final int local_y = global_y - y_min;
             for(int global_x=x_min; global_x<=x_max; global_x++){
                 final int local_x = global_x - x_min;
-                boolean marked = false;
-                if(mask.getBit(local_x, local_y)){
-                    marked = true;
-                    prevMask.setBit(global_x, global_y, true);
-                } else if(prevMask.getBit(global_x, global_y)){
-                    marked = true;
+                if(prevMask.getBit(global_x, global_y)){
+                    stack_temp.setBit(local_x, local_y, true);
+                } else {
+                    if(mask.getBit(local_x, local_y)){
+                        prevMask.setBit(global_x, global_y, true);
+                    }
                 }
-                grid[local_y][local_x] = marked ? -1 : -2;
+            }
+        }
+        if(mask.matches(stack_temp)){
+            stacked_mask = mask;
+        } else {
+            stacked_mask = stack_temp;
+        }
+    }
+
+    public void generateChildren(AtomicInteger progress_count){
+        int[][] grid = new int[mask.height][mask.width];
+        if(stacked_mask != null){
+            for(int y=0; y<mask.height; y++){
+                for(int x=0; x<mask.width; x++){
+                    grid[y][x] = stacked_mask.getBit(x, y) ? -1 : -2;
+                }
             }
         }
         final int childCountUnchecked = ConnectedComponents.fourNeighborEnumerate(grid, -1);
@@ -150,6 +167,13 @@ public class ColorLayer implements Comparable<ColorLayer>{
                 }
             }
             children[index] = new Island(child_x_min[index] + x_min, child_y_min[index] + y_min, childBits, true);
+        }
+        final int progress = progress_count.incrementAndGet();
+        if((progress % 100) == 0){
+            synchronized(System.out){
+                System.out.print(progress + " ColorLayers chunked.\r");
+                System.out.flush();
+            }
         }
     }
 
