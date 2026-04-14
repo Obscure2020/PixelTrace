@@ -9,3 +9,5 @@
 out/
 *.iml
 .DS_Store
+
+CorrectnessChecker.java

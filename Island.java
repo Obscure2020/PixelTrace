@@ -40,34 +40,13 @@ public class Island {
         int[][] grid = new int[height][width];
         for(int y=0; y<height; y++){
             for(int x=0; x<width; x++){
-                if(pixels.getBit(x, y)){
-                    grid[y][x] = -2;
-                } else {
-                    grid[y][x] = -1;
-                }
+                grid[y][x] = pixels.getBit(x, y) ? -2 : -1;
             }
         }
-        for(int x=0; x<width; x++){
-            //This loop checks the top edge and the bottom edge.
-            if(grid[0][x] == -1) FloodFills.eightDirectionFill(grid, x, 0, -1, -2);
-            if(grid[height-1][x] == -1) FloodFills.eightDirectionFill(grid, x, height-1, -1, -2);
-        }
-        for(int y=1; y<height-1; y++){
-            //This loop checks the left edge and the right edge,
-            //except we skip the topmost and bottommost pixels,
-            //because the previous loop already checked those.
-            if(grid[y][0] == -1) FloodFills.eightDirectionFill(grid, 0, y, -1, -2);
-            if(grid[y][width-1] == -1) FloodFills.eightDirectionFill(grid, width-1, y, -1, -2);
-        }
-        int childCount = 0;
-        for(int y=0; y<height; y++){
-            for(int x=0; x<width; x++){
-                if(grid[y][x] == -1){
-                    FloodFills.fourDirectionFill(grid, x, y, -1, childCount);
-                    childCount++;
-                }
-            }
-        }
+        final boolean remainingWork = edgeExclusionPass(grid);
+        if(!remainingWork) return;
+
+        final int childCount = ConnectedComponents.fourNeighborEnumerate(grid, -1);
         children = new Island[childCount];
         int[] child_x_min = new int[childCount];
         Arrays.fill(child_x_min, width);
@@ -101,6 +80,38 @@ public class Island {
             }
             children[i] = new Island(child_x_min[i] + global_x_min, child_y_min[i] + global_y_min, childBits, false);
         }
+    }
+
+    private static boolean edgeExclusionPass(int[][] grid){
+        final int numGroups = ConnectedComponents.eightNeighborEnumerate(grid, -1);
+        if(numGroups < 1) return false;
+        BitSet validSet = new BitSet(numGroups);
+        validSet.set(0, numGroups);
+        final int height = grid.length;
+        final int width = grid[0].length;
+        for(int x=0; x<width; x++){
+            final int top = grid[0][x];
+            final int bottom = grid[height-1][x];
+            if(top >= 0) validSet.clear(top);
+            if(bottom >= 0) validSet.clear(bottom);
+        }
+        if(validSet.isEmpty()) return false;
+        for(int y=1; y<height-1; y++){
+            final int left = grid[y][0];
+            final int right = grid[y][width-1];
+            if(left >= 0) validSet.clear(left);
+            if(right >= 0) validSet.clear(right);
+        }
+        if(validSet.isEmpty()) return false;
+        for(int y=0; y<height; y++){
+            for(int x=0; x<width; x++){
+                final int old = grid[y][x];
+                if(old >= 0){
+                    grid[y][x] = validSet.get(old) ? -1 : -2;
+                }
+            }
+        }
+        return true;
     }
 
     private boolean safeLookup(int x, int y){

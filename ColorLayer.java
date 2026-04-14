@@ -1,5 +1,6 @@
 import java.io.IOException;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class ColorLayer implements Comparable<ColorLayer>{
     public final int color;
@@ -10,6 +11,7 @@ public class ColorLayer implements Comparable<ColorLayer>{
     private final long bounding_area;
     private final int pixel_count;
     private final BitGrid mask;
+    private BitGrid stacked_mask = null;
     private Island[] children;
 
     private static final Island[] EMPTY_ISLANDS = new Island[0];
@@ -81,74 +83,97 @@ public class ColorLayer implements Comparable<ColorLayer>{
         return alpha_compare;
     }
 
-    private int[] getMatchedIslands(int[][] grid){
-        BitSet matchedIslands = new BitSet();
-        for(int y=0; y<mask.height; y++){
-            for(int x=0; x<mask.width; x++){
-                if(mask.getBit(x, y)){
-                    matchedIslands.set(grid[y][x]);
+    public void ingestStackMask(BitGrid prevMask){
+        BitGrid stack_temp = new BitGrid(mask);
+        for(int global_y=y_min; global_y<=y_max; global_y++){
+            final int local_y = global_y - y_min;
+            for(int global_x=x_min; global_x<=x_max; global_x++){
+                final int local_x = global_x - x_min;
+                if(prevMask.getBit(global_x, global_y)){
+                    stack_temp.setBit(local_x, local_y, true);
+                } else {
+                    if(mask.getBit(local_x, local_y)){
+                        prevMask.setBit(global_x, global_y, true);
+                    }
                 }
             }
         }
-        return matchedIslands.stream().toArray();
+        if(mask.matches(stack_temp)){
+            stacked_mask = mask;
+        } else {
+            stacked_mask = stack_temp;
+        }
     }
 
-    public void generateChildren(BitGrid prevMask){
-        for(int y=y_min; y<=y_max; y++){
-            for(int x=x_min; x<=x_max; x++){
-                if(mask.getBit(x-x_min, y-y_min)){
-                    prevMask.setBit(x, y, true);
-                }
-            }
-        }
+    public void generateChildren(AtomicInteger progress_count){
         int[][] grid = new int[mask.height][mask.width];
-        for(int y=y_min; y<=y_max; y++){
-            for(int x=x_min; x<=x_max; x++){
-                if(prevMask.getBit(x, y)){
-                    grid[y-y_min][x-x_min] = -1;
-                } else {
-                    grid[y-y_min][x-x_min] = -2;
-                }
-            }
-        }
-        int islandCount = 0;
-        for(int y=0; y<mask.height; y++){
-            for(int x=0; x<mask.width; x++){
-                if(grid[y][x] == -1){
-                    FloodFills.fourDirectionFill(grid, x, y, -1, islandCount);
-                    islandCount++;
-                }
-            }
-        }
-        int[] validIslands = getMatchedIslands(grid);
-        children = new Island[validIslands.length];
-        for(int i=0; i<validIslands.length; i++){
-            int index = validIslands[i];
-            int local_x_min = mask.width;
-            int local_x_max = -1;
-            int local_y_min = mask.height;
-            int local_y_max = -1;
+        if(stacked_mask != null){
             for(int y=0; y<mask.height; y++){
                 for(int x=0; x<mask.width; x++){
-                    if(grid[y][x] == index){
-                        local_x_min = Math.min(local_x_min, x);
-                        local_x_max = Math.max(local_x_max, x);
-                        local_y_min = Math.min(local_y_min, y);
-                        local_y_max = Math.max(local_y_max, y);
+                    grid[y][x] = stacked_mask.getBit(x, y) ? -1 : -2;
+                }
+            }
+        }
+        final int childCountUnchecked = ConnectedComponents.fourNeighborEnumerate(grid, -1);
+        int[] childIndices = new int[childCountUnchecked];
+        Arrays.fill(childIndices, -1);
+        int childCount = 0;
+        y_scan: for(int y=0; y<mask.height; y++){
+            for(int x=0; x<mask.width; x++){
+                if(mask.getBit(x, y)){
+                    final int oldId = grid[y][x];
+                    if(childIndices[oldId] < 0){
+                        childIndices[oldId] = childCount;
+                        childCount++;
+                        if(childCount == childCountUnchecked) break y_scan;
                     }
                 }
             }
-            int island_width = (local_x_max - local_x_min) + 1;
-            int island_height = (local_y_max - local_y_min) + 1;
-            BitGrid islandBits = new BitGrid(island_width, island_height);
-            for(int y=local_y_min; y<=local_y_max; y++){
-                for(int x=local_x_min; x<=local_x_max; x++){
-                    if(grid[y][x] == index){
-                        islandBits.setBit(x-local_x_min, y-local_y_min, true);
+        }
+        children = new Island[childCount];
+        int[] child_x_min = new int[childCount];
+        Arrays.fill(child_x_min, mask.width);
+        int[] child_x_max = new int[childCount];
+        Arrays.fill(child_x_max, -1);
+        int[] child_y_min = new int[childCount];
+        Arrays.fill(child_y_min, mask.height);
+        int[] child_y_max = new int[childCount];
+        Arrays.fill(child_y_max, -1);
+        for(int y=0; y<mask.height; y++){
+            for(int x=0; x<mask.width; x++){
+                final int id = grid[y][x];
+                if(id >= 0){
+                    final int index = childIndices[id];
+                    if(index >= 0){
+                        child_x_min[index] = Math.min(child_x_min[index], x);
+                        child_x_max[index] = Math.max(child_x_max[index], x);
+                        child_y_min[index] = Math.min(child_y_min[index], y);
+                        child_y_max[index] = Math.max(child_y_max[index], y);
                     }
                 }
             }
-            children[i] = new Island(local_x_min + x_min, local_y_min + y_min, islandBits, true);
+        }
+        for(int i=0; i<childCountUnchecked; i++){
+            final int index = childIndices[i];
+            if(index < 0) continue;
+            int child_width = (child_x_max[index] - child_x_min[index]) + 1;
+            int child_height = (child_y_max[index] - child_y_min[index]) + 1;
+            BitGrid childBits = new BitGrid(child_width, child_height);
+            for(int y=child_y_min[index]; y<=child_y_max[index]; y++){
+                for(int x=child_x_min[index]; x<=child_x_max[index]; x++){
+                    if(grid[y][x] == i){
+                        childBits.setBit(x-child_x_min[index], y-child_y_min[index], true);
+                    }
+                }
+            }
+            children[index] = new Island(child_x_min[index] + x_min, child_y_min[index] + y_min, childBits, true);
+        }
+        final int progress = progress_count.incrementAndGet();
+        if((progress % 100) == 0){
+            synchronized(System.out){
+                System.out.print(progress + " ColorLayers chunked.\r");
+                System.out.flush();
+            }
         }
     }
 
@@ -165,7 +190,7 @@ public class ColorLayer implements Comparable<ColorLayer>{
             out.print(" ");
             children[i].traceSVG(out);
         }
-        out.println("\" />");
+        out.println("\"/>");
     }
 
     public void printTikZ(ObscurePrint out, final int globalHeight) throws IOException {

@@ -67,6 +67,12 @@ public class BitGrid {
         return (binData[spot.index] & spot.mask) != 0;
     }
 
+    public boolean matches(BitGrid other){
+        return (width == other.width)
+            && (height == other.height)
+            && Arrays.equals(binData, other.binData);
+    }
+
     public void debugFile(File location) throws IOException{
         BufferedImage canvas = new BufferedImage(width, height, BufferedImage.TYPE_BYTE_BINARY);
         for(int y=0; y<height; y++){
