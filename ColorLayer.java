@@ -185,10 +185,8 @@ public class ColorLayer implements Comparable<ColorLayer>{
             colorSpec += " fill-opacity=\"" + opacity + "\"";
         }
         out.print("<path " + colorSpec + " d=\"");
-        children[0].traceSVG(out);
-        for(int i=1; i<children.length; i++){
-            out.print(" ");
-            children[i].traceSVG(out);
+        for(Island c : children){
+            c.traceSVG(out);
         }
         out.println("\"/>");
     }

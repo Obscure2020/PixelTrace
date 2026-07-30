@@ -146,16 +146,16 @@ public class Island {
         int cur_x = start_x+1;
         int cur_y = start_y;
         int direction = RIGHT;
-        out.print("M " + (global_x_min + start_x) + " " + (global_y_min + start_y));
+        out.print("M" + (global_x_min + start_x) + "," + (global_y_min + start_y));
         while((cur_x != start_x) || (cur_y != start_y)){
             int turn = cornerTable.get(direction).getOrDefault(fourSquareVal(cur_x, cur_y), -1);
             if(turn >= 0){
                 if((direction == RIGHT) || (direction == LEFT)){ //Horizontal Line
-                    out.print(" h ");
+                    out.print("h");
                     out.print(cur_x - prev_x);
                     prev_x = cur_x;
                 } else { //Vertical Line
-                    out.print(" v ");
+                    out.print("v");
                     out.print(cur_y - prev_y);
                     prev_y = cur_y;
                 }
@@ -169,9 +169,8 @@ public class Island {
                 default -> throw new IllegalStateException("Unexpected value: " + direction);
             }
         }
-        out.print(" z");
+        out.print("z");
         for(Island child : children){
-            out.print(" ");
             child.traceSVG(out);
         }
     }
