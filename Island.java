@@ -151,12 +151,16 @@ public class Island {
             int turn = cornerTable.get(direction).getOrDefault(fourSquareVal(cur_x, cur_y), -1);
             if(turn >= 0){
                 if((direction == RIGHT) || (direction == LEFT)){ //Horizontal Line
-                    out.print("h");
-                    out.print(cur_x - prev_x);
+                    String chunk = "h" + (cur_x - prev_x);
+                    String candidate = "H" + (cur_x + global_x_min);
+                    if(candidate.length() < chunk.length()) chunk = candidate;
+                    out.print(chunk);
                     prev_x = cur_x;
                 } else { //Vertical Line
-                    out.print("v");
-                    out.print(cur_y - prev_y);
+                    String chunk = "v" + (cur_y - prev_y);
+                    String candidate = "V" + (cur_y + global_y_min);
+                    if(candidate.length() < chunk.length()) chunk = candidate;
+                    out.print(chunk);
                     prev_y = cur_y;
                 }
                 direction = turn;
