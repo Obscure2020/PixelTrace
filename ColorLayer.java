@@ -1,9 +1,6 @@
 import java.io.IOException;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.stream.IntStream;
 
 public class ColorLayer implements Comparable<ColorLayer>{
     public final int color;
