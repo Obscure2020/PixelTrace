@@ -1,6 +1,9 @@
 import java.io.IOException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.IntStream;
 
 public class ColorLayer implements Comparable<ColorLayer>{
     public final int color;
@@ -106,15 +109,64 @@ public class ColorLayer implements Comparable<ColorLayer>{
     }
 
     public void generateChildren(AtomicInteger progress_count){
+        if(stacked_mask == null) return;
+
         int[][] grid = new int[mask.height][mask.width];
-        if(stacked_mask != null){
-            for(int y=0; y<mask.height; y++){
-                for(int x=0; x<mask.width; x++){
-                    grid[y][x] = stacked_mask.getBit(x, y) ? -1 : -2;
-                }
+        for(int y=0; y<mask.height; y++){
+            for(int x=0; x<mask.width; x++){
+                grid[y][x] = stacked_mask.getBit(x, y) ? -1 : -2;
             }
         }
-        final int childCountUnchecked = ConnectedComponents.fourNeighborEnumerate(grid, -1);
+
+        //Get first-pass island enumeration
+        int childCountUnchecked = ConnectedComponents.fourNeighborEnumerate(grid, -1);
+
+        if(childCountUnchecked > 1){
+            int[] child_x_min = new int[childCountUnchecked];
+            Arrays.fill(child_x_min, mask.width);
+            int[] child_x_max = new int[childCountUnchecked];
+            Arrays.fill(child_x_max, -1);
+            int[] child_y_min = new int[childCountUnchecked];
+            Arrays.fill(child_y_min, mask.height);
+            int[] child_y_max = new int[childCountUnchecked];
+            Arrays.fill(child_y_max, -1);
+
+            //Check validity of islands, and calculate specific bounding boxes for valid islands
+            for(int y=0; y<mask.height; y++){
+                for(int x=0; x<mask.width; x++){
+                    final int id = grid[y][x];
+                    if((id >= 0) && (mask.getBit(x, y))){
+                        child_x_min[id] = Math.min(child_x_min[id], x);
+                        child_x_max[id] = Math.max(child_x_max[id], x);
+                        child_y_min[id] = Math.min(child_y_min[id], y);
+                        child_y_max[id] = Math.max(child_y_max[id], y);
+                    }
+                }
+            }
+
+            //Erase invalid islands, and crop down valid islands
+            for(int y=0; y<mask.height; y++){
+                for(int x=0; x<mask.width; x++){
+                    final int id = grid[y][x];
+                    if(id >= 0){
+                        if(child_x_max[id] >= 0){
+                            if((x < child_x_min[id]) || (x > child_x_max[id]) || (y < child_y_min[id]) || (y > child_y_max[id])){
+                                grid[y][x] = -2;
+                            } else {
+                                grid[y][x] = -1;
+                            }
+                        } else {
+                            grid[y][x] = -2;
+                        }
+                    }
+                }
+            }
+
+            //Get second-pass island enumeration
+            childCountUnchecked = ConnectedComponents.fourNeighborEnumerate(grid, -1);
+        }
+
+        //Check validity of islands
         int[] childIndices = new int[childCountUnchecked];
         Arrays.fill(childIndices, -1);
         int childCount = 0;
@@ -125,11 +177,12 @@ public class ColorLayer implements Comparable<ColorLayer>{
                     if(childIndices[oldId] < 0){
                         childIndices[oldId] = childCount;
                         childCount++;
-                        if(childCount == childCountUnchecked) break y_scan;
+                        if(childCount >= childCountUnchecked) break y_scan;
                     }
                 }
             }
         }
+
         children = new Island[childCount];
         int[] child_x_min = new int[childCount];
         Arrays.fill(child_x_min, mask.width);
@@ -139,6 +192,8 @@ public class ColorLayer implements Comparable<ColorLayer>{
         Arrays.fill(child_y_min, mask.height);
         int[] child_y_max = new int[childCount];
         Arrays.fill(child_y_max, -1);
+
+        //Calculate bounding boxes for valid islands
         for(int y=0; y<mask.height; y++){
             for(int x=0; x<mask.width; x++){
                 final int id = grid[y][x];
@@ -153,6 +208,8 @@ public class ColorLayer implements Comparable<ColorLayer>{
                 }
             }
         }
+
+        //Using bounding box and validity information, create and save Island objects for each island
         for(int i=0; i<childCountUnchecked; i++){
             final int index = childIndices[i];
             if(index < 0) continue;
@@ -168,6 +225,7 @@ public class ColorLayer implements Comparable<ColorLayer>{
             }
             children[index] = new Island(child_x_min[index] + x_min, child_y_min[index] + y_min, childBits, true);
         }
+
         final int progress = progress_count.incrementAndGet();
         if((progress % 100) == 0){
             synchronized(System.out){
